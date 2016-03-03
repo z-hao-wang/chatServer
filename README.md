@@ -11,6 +11,7 @@ npm start
 Check your http://localhost:3000/ or  `open http://localhost:3000/`
 
 ## How to test
+Tests are using Jest
 
 `npm test`
 
