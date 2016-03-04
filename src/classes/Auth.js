@@ -56,17 +56,22 @@ class Auth {
     }
   }
 
-  authWithCredentials (data, cb) {
+  login (data, cb) {
     if ((data.email || data.username) && data.password) {
       var searchObj;
       if (data.username) {
         searchObj = { username: data.username };
-	  } else if (data.email) {
-	    searchObj = { email: data.email };
-	  }
+      } else if (data.email) {
+        searchObj = { email: data.email };
+      }
       User.findOne(searchObj, function(err, user) {
         if (!user) {
-          cb({err: 1});
+          cb({
+            err: 1,
+            response: {
+              msg: "Username or password mismatch"
+            }
+          });
         } else {
           // add some salt
           if (sha1(this.getPasswdSalt() + data.password) === user.password) {
@@ -75,11 +80,17 @@ class Auth {
               err: 0,
               response: {
                 token : tokenData.token,
-                expires: tokenData.expires
+                expires: tokenData.expires,
+                user: user
               }
             });
           } else {
-            cb({err: 2});
+            cb({
+              err: 2,
+              response: {
+                msg: "Username or password mismatch"
+              }
+            });
           }
         }
       }.bind(this));
@@ -90,7 +101,7 @@ class Auth {
 
   userExists (data, cb) {
     if (data.username) {
-      User.findOne({ email: data.username }, function(err, user) {
+      User.findOne({ username: data.username }, function(err, user) {
         if (!user) {
           cb(0);
         } else {
@@ -107,15 +118,18 @@ class Auth {
       if (!exists) {
         // create a new user
         var user = new User({
-          name: data.name,
           username: data.username,
-          email: data.email,
           password: sha1(this.getPasswdSalt() + data.password)
         });
         // call the built-in save method to save to the database
         user.save(function(err) {
           if (err) {
-            cb({err: 2})
+            cb({
+              err: 2,
+              response: {
+                msg: "unknown error"
+              }
+            });
             throw err;
           } else {
             var tokenData = this.genToken(user.email)
@@ -131,7 +145,12 @@ class Auth {
 
         }.bind(this));
       } else {
-        cb({err: 1})
+        cb({
+          err: 1,
+          response: {
+            msg: "Username Exists"
+          }
+        });
       }
     }.bind(this));
   }

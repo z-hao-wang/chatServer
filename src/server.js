@@ -60,6 +60,7 @@ wss.on("connection", function(ws) {
   var currentUser, convManager;
   var userLogin = function (user) {
     currentUser = user;
+    console.log("userLogin", currentUser);
     convManager = new ConvManager(currentUser);
     clientsWithId[currentUser.username] = ws;
   };
@@ -68,7 +69,7 @@ wss.on("connection", function(ws) {
   Logger.info("websocket peer connected");
   ws.on("message", function(event) {
     var data = JSON.parse(event);
-    Logger.info("onmessage: token=" + data.token);
+
     Logger.info("onmessage: action=" + data.action);
     var sendFail = function (response) {
       ws.send(JSON.stringify({
@@ -88,18 +89,16 @@ wss.on("connection", function(ws) {
         }
       }));
     };
-    if (data.action == 'register') {
-        auth.register({
-          username: req.body.username,
-          email: req.body.email,
-          name: req.body.name,
-          password: req.body.password
+    if (data.action == 'register' || data.action == 'login') {
+        auth[data.action]({
+          username: data.username,
+          password: data.password
         }, function (ret) {
           if (ret.err) {
-            sendFail();
+            sendFail(ret.response);
           } else {
             userLogin(ret.response.user);
-            sendSuccess();
+            sendSuccess(ret.response);
           }
         });
     }
@@ -116,6 +115,7 @@ wss.on("connection", function(ws) {
         }
       });
     } else if (convManager) {
+      Logger.info("onmessage: token=" + data.token);
       // For all other calls, gameMananger will take care
       convManager.doAction(data.action, data.data, function (res) {
         var ret = {
@@ -129,7 +129,10 @@ wss.on("connection", function(ws) {
   });
   // Close connection and remove from array
   ws.on("close", function() {
-    Logger.info("websocket peer closed username=" + currentUser.username);
-    clientsWithId[currentUser.username]= null;
+    if (currentUser) {
+      Logger.info("websocket peer closed username=" + currentUser.username);
+      clientsWithId[currentUser.username]= null;
+    }
+    Logger.info("websocket peer closed");
   })
 });
