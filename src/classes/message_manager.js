@@ -3,6 +3,7 @@ var User = require('../models/user');
 var Message = require('../models/message');
 var Conversation = require('../models/conversation');
 var mongoose = require('mongoose');
+var Logger = require('winston');
 
 class MessageManager {
   constructor (currentUser) {
@@ -15,12 +16,22 @@ class MessageManager {
    * @param cb
    */
   newConversation(params, cb) {
-    var conversation = Conversation.create(this.currentUser, params.user_ids);
-    conversation.save(function (err) {
-      if (!err) {
-        console.log("new conversation");
-        cb && cb(conversation);
+    var that = this;
+    Logger.info("newConversation userids=", params.user_ids);
+    User.find({_id: {$in: params.user_ids}}, function (err, users) {
+      var displayNameDefault = [];
+      for (var i = 0; i < users.length; i++) {
+        displayNameDefault.push(users[i].displayName || users[i].username);
       }
+      var conversation = Conversation.create(that.currentUser, params.user_ids, displayNameDefault.join(','));
+      conversation.save(function (err) {
+        if (!err) {
+          Logger.info("newConversation saved", conversation.toPublicJSON());
+          cb && cb(conversation.toPublicJSON());
+        } else {
+          Logger.error('newConversation error', err)
+        }
+      });
     });
   }
 
@@ -46,7 +57,7 @@ class MessageManager {
       text: params.text
     });
     msg.save(function (err, product, numAffected) {
-      console.log("sendTextMessage save ", err);
+      Logger.info("sendTextMessage save ", err);
       if (!err) {
         cb && cb(msg);
       }

@@ -7,6 +7,7 @@ var Schema = mongoose.Schema;
 var ConversationSchema = new Schema({
   created_by: { type: mongoose.Schema.Types.ObjectId, required: true },
   members: { type: Array, required: true },
+  displayName: { type: String, required: true },
   last_message_id: { type: mongoose.Schema.Types.ObjectId, required: false },
   created_at: { type: Date, required: true, default: Date.now },
   updated_at: { type: Date, required: false }
@@ -17,20 +18,27 @@ var ConversationSchema = new Schema({
  * @param member_ids {array} array of mongodb ids
  * @returns {MessageSchema.statics}
  */
-ConversationSchema.statics.create = function (user, member_ids) {
+ConversationSchema.statics.create = function (user, member_ids, displayName) {
+  if (member_ids.indexOf(user._id.toString()) == -1) {
+    member_ids.push(user._id.toString());
+  }
   var params = {
     created_by: [user._id],
-    members: member_ids
+    members: member_ids,
+    displayName: displayName || 'Unnamed Chat'
   };
   return new this(params);
 };
 
-ConversationSchema.statics.create = function (user) {
-  var params = {
-    created_by: [user._id],
-    members: [user._id]
+ConversationSchema.methods.toPublicJSON = function () {
+  var ret = {
+    _id: this._id,
+    members: this.members,
+    displayName: this.displayName,
+    created_by: this.created_by,
+    last_message_id: this.last_message_id
   };
-  return new this(params);
+  return ret; // TODO: may want to find better ways to convert to plain json object
 };
 
 module.exports = mongoose.model('Conversation', ConversationSchema);
