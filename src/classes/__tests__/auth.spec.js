@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 jest.dontMock('../auth');
 jest.dontMock('mongoose');
 var Auth = require('../auth');
@@ -46,7 +46,7 @@ describe('auth class', function () {
     });
     var cb = jest.genMockFunction();
     var res = auth.register(user1, cb);
-    expect(cb).toBeCalledWith({err: 1});
+    expect(cb).toBeCalledWith({err: 1 ,response: {msg: 'Username Exists'}});
   });
   
 });

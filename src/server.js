@@ -5,7 +5,7 @@ var bodyParser = require('body-parser');
 var User = require('./models/user');
 var Auth = require('./classes/auth');
 var Config = require('../config/app');
-var ConvManager = require('./classes/conversation_manager');
+var MessageManager = require('./classes/message_manager');
 var Logger = require('winston');
 var ws = require('ws');
 //var http = require('http');
@@ -57,15 +57,14 @@ server = app.listen(process.env.PORT || 3000, () => {
 var wss = new WebSocketServer({server: server})
 wss.on("connection", function(ws) {
   
-  var currentUser, convManager;
+  var currentUser, messageManager;
   var userLogin = function (user) {
     currentUser = user;
     console.log("userLogin", currentUser);
-    convManager = new ConvManager(currentUser);
-    clientsWithId[currentUser.username] = ws;
+    messageManager = new MessageManager(currentUser);
+    clientsWithId[currentUser._id] = ws;
   };
-  
-  
+
   Logger.info("websocket peer connected");
   ws.on("message", function(event) {
     var data = JSON.parse(event);
@@ -104,6 +103,7 @@ wss.on("connection", function(ws) {
     }
     // On handshake, we identify the player and send active games back
     else if (data.action == 'handshake') {
+      Logger.info("onmessage: token=" + data.token);
       auth.getUserByToken(data.token, function (ret) {
         if (ret.err) {
           // This means the token is not valid or expired
@@ -111,19 +111,19 @@ wss.on("connection", function(ws) {
           sendFail({msg: "requireLogin"});
         } else {
           userLogin(ret.response.user);
-          sendSuccess();
+          sendSuccess(ret.response);
         }
       });
-    } else if (convManager) {
+    } else if (messageManager) {
       Logger.info("onmessage: token=" + data.token);
       // For all other calls, gameMananger will take care
-      convManager.doAction(data.action, data.data, function (res) {
+      messageManager.doAction(data.action, data.data, function (res) {
         var ret = {
           action: data.action,
           data: res
         };
         Logger.info("send", JSON.stringify(ret));
-        
+        sendSuccess(ret);
       });
     }
   });
@@ -131,7 +131,7 @@ wss.on("connection", function(ws) {
   ws.on("close", function() {
     if (currentUser) {
       Logger.info("websocket peer closed username=" + currentUser.username);
-      clientsWithId[currentUser.username]= null;
+      clientsWithId[currentUser._id]= null;
     }
     Logger.info("websocket peer closed");
   })

@@ -44,7 +44,7 @@ class Auth {
         cb({
           err: err,
           response: {
-            user: user
+            user: user.toPublicJSON()
           }
         })
       });
@@ -81,7 +81,7 @@ class Auth {
               response: {
                 token : tokenData.token,
                 expires: tokenData.expires,
-                user: user
+                user: user.toPublicJSON()
               }
             });
           } else {
@@ -138,7 +138,7 @@ class Auth {
               response: {
                 token: tokenData.token,
                 expires: tokenData.expires,
-                user: user
+                user: user.toPublicJSON()
               }
             });
           }
