@@ -38,12 +38,14 @@ class Auth {
         message: "token empty"
       });
     }
+    var that = this;
     var decoded = this.decodeToken(token);
     if (decoded.exp > +(new Date())) {
       User.findOne({username: decoded.iss}, function (err, user) {
         cb({
           err: err,
           response: {
+            token: that.genToken(decoded.iss).token, // renew this token
             user: user.toPublicJSON()
           }
         })
@@ -156,7 +158,7 @@ class Auth {
   }
 
   logout () {
-
+    // TODO: do something when user logout
   }
 }
 

@@ -100,6 +100,16 @@ wss.on("connection", function(ws) {
             sendSuccess(ret.response);
           }
         });
+    } else if (data.action == 'logout') {
+      auth[data.action]({
+        username: data.username
+      });
+      // TODO: There is a bug that after logout, the connect still remains active.
+      // Maybe consider to close the connection on logout
+      if (currentUser) {
+        Logger.info("websocket peer closed username=" + currentUser.username);
+        clientsWithId[currentUser._id]= null;
+      }
     }
     // On handshake, we identify the player and send active games back
     else if (data.action == 'handshake') {
