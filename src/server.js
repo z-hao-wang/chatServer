@@ -125,8 +125,7 @@ wss.on("connection", function(ws) {
         }
       });
     } else if (messageManager) {
-      Logger.info("onmessage: token=" + data.token);
-      // For all other calls, gameMananger will take care
+      // For all other calls, gameManager will take care
       messageManager.doAction(data.action, data.data, function (res) {
         var ret = {
           action: data.action,

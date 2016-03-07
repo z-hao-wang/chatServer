@@ -8,37 +8,41 @@ var MessageSchema = new Schema({
   created_by: { type: mongoose.Schema.Types.ObjectId, required: true },
   text: { type: String, required: false },
   meta: { type: Object, required: false },
-  to_username: { type: String, required: true}, // toUsername
-  created_at: { type: Date, required: true, default: Date.now },
+  conversation_id: { type: mongoose.Schema.Types.ObjectId, required: true},
+  recipients: { type: Array, required: false }, // Array of user ids
+  created_at: { type: Date, required: true, default: Date.now }
   //updated_at: { type: Date } // in the future we may want to add edit message feature
 });
 
 /**
- * @param params {from: {User}, to: {User}, text: {String}}
+ * @param params {from: {User}, conversation_id: {Mongodb id}, text: {String}}
  * @returns {MessageSchema.statics}
  */
 MessageSchema.statics.createTextMessage = function (params) {
+  var conversationId = mongoose.Types.ObjectId(params.conversation_id.toString());
   var params = {
     created_by: params.from._id,
     text: params.text,
-    to_username: params.toUsername,
+    conversation_id: conversationId,
+    recipients: params.recipients,
     meta: {
-      type: 'text'
+      type: 'text' //default is text
     }
   };
   return new this(params);
 };
 
-MessageSchema.statics.toJson = function () {
+MessageSchema.methods.toPublicJSON = function () {
   var ret = {
-    created_by: this._id,
+    _id: this._id,
+    created_by: this.created_by,
+    created_at: this.created_at,
     text: this.text,
-    to_username: this.to_username,
+    conversation_id: this.conversation_id,
+    recipients: this.recipients,
     meta: this.meta
   };
   return ret;
 };
 
-var Message = mongoose.model('Message', MessageSchema);
-
-module.exports = Message;
+module.exports = mongoose.model('Message', MessageSchema);

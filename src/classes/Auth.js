@@ -62,7 +62,7 @@ class Auth {
     if ((data.email || data.username) && data.password) {
       var searchObj;
       if (data.username) {
-        searchObj = { username: data.username };
+        searchObj = { username: data.username.toLowerCase() };
       } else if (data.email) {
         searchObj = { email: data.email };
       }
@@ -120,7 +120,7 @@ class Auth {
       if (!exists) {
         // create a new user
         var user = new User({
-          username: data.username,
+          username: data.username.toLowerCase(),
           password: sha1(this.getPasswdSalt() + data.password)
         });
         // call the built-in save method to save to the database
