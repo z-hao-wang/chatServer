@@ -42,13 +42,20 @@ class Auth {
     var decoded = this.decodeToken(token);
     if (decoded.exp > +(new Date())) {
       User.findOne({username: decoded.iss}, function (err, user) {
-        cb({
-          err: err,
-          response: {
-            token: that.genToken(decoded.iss).token, // renew this token
-            user: user.toPublicJSON()
-          }
-        })
+        if (!user) {
+          cb({
+            err: 3,
+            message: "user not exist"
+          }); // error
+        } else {
+          cb({
+            err: err,
+            response: {
+              token: that.genToken(decoded.iss).token, // renew this token
+              user: user.toPublicJSON()
+            }
+          });
+        }
       });
     } else {
       cb({
@@ -103,7 +110,7 @@ class Auth {
 
   userExists (data, cb) {
     if (data.username) {
-      User.findOne({ username: data.username }, function(err, user) {
+      User.findOne({ username: data.username.toLowerCase() }, function(err, user) {
         if (!user) {
           cb(0);
         } else {
