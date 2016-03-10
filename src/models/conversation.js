@@ -7,7 +7,7 @@ var Schema = mongoose.Schema;
 var ConversationSchema = new Schema({
   created_by: { type: mongoose.Schema.Types.ObjectId, required: true },
   members: { type: Array, required: true },
-  displayName: { type: String, required: true },
+  displayName: { type: String, required: false },
   last_message_id: { type: mongoose.Schema.Types.ObjectId, required: false },
   created_at: { type: Date, required: true, default: Date.now },
   updated_at: { type: Date, required: false }
@@ -25,7 +25,7 @@ ConversationSchema.statics.create = function (user, member_ids, displayName) {
   var params = {
     created_by: [user._id],
     members: member_ids,
-    displayName: displayName || 'Unnamed Chat'
+    displayName: displayName || ''
   };
   return new this(params);
 };

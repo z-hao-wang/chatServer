@@ -20,11 +20,8 @@ class MessageManager {
     var that = this;
     Logger.info("newConversation userids=", params.user_ids);
     User.find({_id: {$in: params.user_ids}}, function (err, users) {
-      var displayNameDefault = [];
-      for (var i = 0; i < users.length; i++) {
-        displayNameDefault.push(users[i].displayName || users[i].username);
-      }
-      var conversation = Conversation.create(that.currentUser, params.user_ids, displayNameDefault.join(','));
+      // Be default, let's give it empty display name
+      var conversation = Conversation.create(that.currentUser, params.user_ids, '');
       conversation.save(function (err) {
         if (!err) {
           Logger.info("newConversation saved", conversation.toPublicJSON());
@@ -60,6 +57,23 @@ class MessageManager {
       }
     });
   }
+  
+  getUsers(params, cb) {
+    Logger.info("getUsers userids=", params.user_ids)
+    var userIds = params.user_ids;
+    if (userIds.length > 0) {
+      User.find({_id: {$in: userIds}}, function (err, users) {
+        if (!err) {
+          var res = users.map((user) => {return user.toPublicJSON()});
+          cb && cb(res);
+        } else {
+          cb && cb([]);
+        }
+      });
+    } else {
+      cb && cb([]);
+    }
+  }
 
   /**
    * @param params {conversation_id: {string}, text: {string}}
@@ -71,7 +85,7 @@ class MessageManager {
     Conversation.findOne({_id: mongoose.Types.ObjectId(params.conversation_id.toString())}, (err, conversation) => {
       // get conversation data
       // find all recipients (except current user)
-      var recipients = conversation.members.filter((id) => { return id != that.currentUser._id;});
+      var recipients = conversation.members.filter((id) => { return id != that.currentUser._id; });
       var msg = Message.createTextMessage({
         from: this.currentUser,
         conversation_id: params.conversation_id,

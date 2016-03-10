@@ -4,7 +4,7 @@ var Schema = mongoose.Schema;
 var userSchema = new Schema({
   name: String,
   username: { type: String, required: true, unique: true },
-  displayName: { type: String, required: false, unique: false },
+  display_name: { type: String, required: false, unique: false },
   email: { type: String, required: false, unique: true, sparse: true },
   phone: { type: Number, required: false, unique: true, sparse: true },
   password: { type: String, required: true },
@@ -20,7 +20,7 @@ userSchema.methods.toPublicJSON = function () {
   var ret = {
     _id: this._id,
     username: this.username,
-    displayName: this.displayName
+    display_name: this.display_name
   };
   return ret;
 };
