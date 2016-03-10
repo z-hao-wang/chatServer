@@ -6,4 +6,3 @@ build/
 dist/
 projectFilesBackup/
 npm-debug.log
-config/mongodb.js
