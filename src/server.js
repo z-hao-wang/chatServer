@@ -20,8 +20,7 @@ var auth = new Auth();
 var clientsWithId = {};
 
 app.use(bodyParser.json());
-
-mongoose.connect(Config.DB.mongodbURL);
+mongoose.connect(process.env.MONGODB_URL);
 
 function rest(req, res, next) {
   res.setHeader('Content-Type', 'application/json');
