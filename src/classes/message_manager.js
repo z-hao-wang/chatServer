@@ -18,7 +18,7 @@ class MessageManager {
    */
   newConversation(params, cb) {
     var that = this;
-    Logger.info("newConversation userids=", params.user_ids);
+    Logger.info("newConversation userids=", params.user_ids.join(','));
     User.find({_id: {$in: params.user_ids}}, function (err, users) {
       // Be default, let's give it empty display name
       var conversation = Conversation.create(that.currentUser, params.user_ids, '');
@@ -49,7 +49,7 @@ class MessageManager {
   }
 
   usernameLookUp(params, cb) {
-    User.findOne({username: params.username}, function (err, user) {
+    User.findOne({username: params.username.toLowerCase()}, function (err, user) {
       if (!err && user) {
         cb && cb(user.toPublicJSON());
       } else {
@@ -85,7 +85,7 @@ class MessageManager {
     Conversation.findOne({_id: mongoose.Types.ObjectId(params.conversation_id.toString())}, (err, conversation) => {
       // get conversation data
       // find all recipients (except current user)
-      var recipients = conversation.members.filter((id) => { return id != that.currentUser._id; });
+      var recipients = conversation.members.filter((id) => { return id != that.currentUser.id; });
       var msg = Message.createTextMessage({
         from: this.currentUser,
         conversation_id: params.conversation_id,
@@ -102,7 +102,7 @@ class MessageManager {
           recipients.forEach((user_id) => {
             Notif.create({
               user_id: user_id,
-              message_id: msg._id
+              message_id: msg.id
             }).save();
           });
         } else {
@@ -114,7 +114,7 @@ class MessageManager {
 
   getNewMessages(params, cb) {
     // first find all notifs
-    Notif.find({user_id: this.currentUser._id}, (err, notifs) => {
+    Notif.find({user_id: this.currentUser.id}, (err, notifs) => {
       if (err) {
         Logger.error('getNewMessages:Notif.find:error', err);
         return;

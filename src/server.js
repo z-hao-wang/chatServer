@@ -60,9 +60,9 @@ wss.on("connection", function(ws) {
   var currentUser, messageManager;
   var userLogin = function (user) {
     currentUser = user;
-    console.log("userLogin", currentUser);
+    Logger.info("userLogin", JSON.stringify(currentUser));
     messageManager = new MessageManager(currentUser);
-    clientsWithId[currentUser._id] = ws;
+    clientsWithId[currentUser.id] = ws;
   };
 
   Logger.info("websocket peer connected");
@@ -108,7 +108,7 @@ wss.on("connection", function(ws) {
       // Maybe consider to close the connection on logout
       if (currentUser) {
         Logger.info("websocket peer closed username=" + currentUser.username);
-        clientsWithId[currentUser._id]= null;
+        clientsWithId[currentUser.id]= null;
       }
     }
     // On handshake, we identify the player and send active games back
@@ -125,6 +125,7 @@ wss.on("connection", function(ws) {
         }
       });
     } else if (messageManager) {
+      Logger.info("info: onmessage: data=" + JSON.stringify(data.data));
       // For all other calls, gameManager will take care
       messageManager.doAction(data.action, data.data, function (res) {
         var ret = {
@@ -140,7 +141,7 @@ wss.on("connection", function(ws) {
   ws.on("close", function() {
     if (currentUser) {
       Logger.info("websocket peer closed username=" + currentUser.username);
-      clientsWithId[currentUser._id]= null;
+      clientsWithId[currentUser.id]= null;
     }
     Logger.info("websocket peer closed");
   })

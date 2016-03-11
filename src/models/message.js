@@ -21,7 +21,7 @@ var MessageSchema = new Schema({
 MessageSchema.statics.createTextMessage = function (params) {
   var conversationId = mongoose.Types.ObjectId(params.conversation_id.toString());
   var params = {
-    created_by: params.from._id,
+    created_by: params.from.id,
     text: params.text,
     conversation_id: conversationId,
     recipients: params.recipients,
@@ -34,7 +34,7 @@ MessageSchema.statics.createTextMessage = function (params) {
 
 MessageSchema.methods.toPublicJSON = function () {
   var ret = {
-    _id: this._id,
+    id: this._id,
     created_by: this.created_by,
     created_at: this.created_at,
     text: this.text,

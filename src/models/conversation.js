@@ -19,11 +19,11 @@ var ConversationSchema = new Schema({
  * @returns {MessageSchema.statics}
  */
 ConversationSchema.statics.create = function (user, member_ids, displayName) {
-  if (member_ids.indexOf(user._id.toString()) == -1) {
-    member_ids.push(user._id.toString());
+  if (member_ids.indexOf(user.id.toString()) == -1) {
+    member_ids.push(user.id.toString()); // push myself into members
   }
   var params = {
-    created_by: [user._id],
+    created_by: user.id,
     members: member_ids,
     displayName: displayName || ''
   };
@@ -32,7 +32,7 @@ ConversationSchema.statics.create = function (user, member_ids, displayName) {
 
 ConversationSchema.methods.toPublicJSON = function () {
   var ret = {
-    _id: this._id,
+    id: this._id,
     members: this.members,
     displayName: this.displayName,
     created_by: this.created_by,

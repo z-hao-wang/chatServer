@@ -18,7 +18,7 @@ var userSchema = new Schema({
  */
 userSchema.methods.toPublicJSON = function () {
   var ret = {
-    _id: this._id,
+    id: this._id,
     username: this.username,
     display_name: this.display_name
   };
