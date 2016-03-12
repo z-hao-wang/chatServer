@@ -5,10 +5,12 @@ var Conversation = require('../models/conversation');
 var Notif = require('../models/notif');
 var mongoose = require('mongoose');
 var Logger = require('winston');
+var redis = require('redis');
 
 class MessageManager {
   constructor (currentUser) {
     this.currentUser = currentUser;
+    this.redis = redis.createClient(process.env.REDISCLOUD_URL, {no_ready_check: true});
   }
 
   /**
@@ -105,7 +107,13 @@ class MessageManager {
               message_id: msg.id
             }).save();
           });
-        } else {
+          var redisMessage = JSON.stringify({
+            recipients: recipients,
+            action: 'pushTextMessage',
+            data: msg.toPublicJSON()
+          });
+          that.redis.publish('global', redisMessage);
+      } else {
           cb && cb(null);
         }
       });

@@ -8,10 +8,16 @@ var Config = require(__dirname + '/../config/app');
 var MessageManager = require(__dirname + '/classes/message_manager');
 var Logger = require('winston');
 var ws = require('ws');
-//var http = require('http');
-
+var redis = require('redis');
 var EventEmitter = require("events").EventEmitter;
-//var emitter = new EventEmitter();
+
+// Setup Redis pub/sub.
+// NOTE: You must create two Redis clients, as
+// the one that subscribes can't also publish.
+var sub = redis.createClient(process.env.REDISCLOUD_URL, {no_ready_check: true});
+sub.subscribe('global');
+
+
 
 var WebSocketServer  = ws.Server;
 var server;
@@ -22,6 +28,24 @@ var clientsWithId = {};
 app.use(bodyParser.json());
 console.log('Connecting to ' + process.env.MONGODB_URL);
 mongoose.connect(process.env.MONGODB_URL);
+
+// Listen for messages being published to this server.
+sub.on('message', function(channel, dataStr) {
+  // Broadcast the message to all connected clients on this server.
+  var data = JSON.parse(dataStr);
+  console.log('message:data', data);
+  if (data && data.recipients) {
+    for (var i = 0; i < data.recipients.length; i++) {
+      if (clientsWithId[data.recipients[i]]) {
+        var ret = JSON.stringify({
+          action: data.action,
+          data: data.data
+        });
+        clientsWithId[data.recipients[i]].send(ret);
+      }
+    }
+  }
+});
 
 function rest(req, res, next) {
   res.setHeader('Content-Type', 'application/json');
@@ -134,6 +158,9 @@ wss.on("connection", function(ws) {
         };
         Logger.info("send", JSON.stringify(ret));
         sendSuccess(ret);
+        if (data.action == 'newMessage') {
+          pub.publish('global', message);
+        }
       });
     }
   });
