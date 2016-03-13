@@ -6,3 +6,5 @@ build/
 dist/
 projectFilesBackup/
 npm-debug.log
+key.pem
+cert.pem

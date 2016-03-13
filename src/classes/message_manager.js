@@ -6,10 +6,10 @@ var Notif = require('../models/notif');
 var mongoose = require('mongoose');
 var Logger = require('winston');
 var redis = require('redis');
+var PushNotifManager = require('./push_notif_manager');
 
 class MessageManager {
-  constructor (currentUser) {
-    this.currentUser = currentUser;
+  constructor () {
     this.redis = redis.createClient(process.env.REDISCLOUD_URL, {no_ready_check: true});
   }
 
@@ -18,12 +18,12 @@ class MessageManager {
    * @param params {user_ids: []}
    * @param cb
    */
-  newConversation(params, cb) {
+  newConversation(params, cb, currentUser) {
     var that = this;
     Logger.info("newConversation userids=", params.user_ids.join(','));
     User.find({_id: {$in: params.user_ids}}, function (err, users) {
       // Be default, let's give it empty display name
-      var conversation = Conversation.create(that.currentUser, params.user_ids, '');
+      var conversation = Conversation.create(currentUser, params.user_ids, '');
       conversation.save(function (err) {
         if (!err) {
           Logger.info("newConversation saved", conversation.toPublicJSON());
@@ -81,15 +81,15 @@ class MessageManager {
    * @param params {conversation_id: {string}, text: {string}}
    * @param cb
    */
-  sendTextMessage(params, cb) {
+  sendTextMessage(params, cb, currentUser) {
     var that = this;
     // TODO: Message validation: Cannot send to yourself, cannot send empty message
     Conversation.findOne({_id: mongoose.Types.ObjectId(params.conversation_id.toString())}, (err, conversation) => {
       // get conversation data
       // find all recipients (except current user)
-      var recipients = conversation.members.filter((id) => { return id != that.currentUser.id; });
+      var recipients = conversation.members.filter((id) => { return id != currentUser.id; });
       var msg = Message.createTextMessage({
-        from: this.currentUser,
+        from: currentUser,
         conversation_id: params.conversation_id,
         recipients: recipients,
         text: params.text
@@ -102,10 +102,14 @@ class MessageManager {
           cb && cb(msg.toPublicJSON());
           // Save this message to Notif
           recipients.forEach((user_id) => {
-            Notif.create({
+            var notif = Notif.create({
               user_id: user_id,
               message_id: msg.id
-            }).save();
+            });
+            // to simplify the process, we are going to try to send a push notif to all these recipients
+            // in the future, we want to have a worker to do this in the background.
+            PushNotifManager.send(notif);
+            notif.save();
           });
           var redisMessage = JSON.stringify({
             recipients: recipients,
@@ -120,9 +124,9 @@ class MessageManager {
     });
   }
 
-  getNewMessages(params, cb) {
+  getNewMessages(params, cb, currentUser) {
     // first find all notifs
-    Notif.find({user_id: this.currentUser.id}, (err, notifs) => {
+    Notif.find({user_id: currentUser.id}, (err, notifs) => {
       if (err) {
         Logger.error('getNewMessages:Notif.find:error', err);
         return;
@@ -155,9 +159,9 @@ class MessageManager {
     });
   }
 
-  doAction (action, data, cb) {
+  doAction (action, data, cb, currentUser) {
     if (this[action]) {
-      this[action](data, cb);
+      this[action](data, cb, currentUser);
     }
   }
 }

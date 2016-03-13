@@ -17,8 +17,6 @@ var EventEmitter = require("events").EventEmitter;
 var sub = redis.createClient(process.env.REDISCLOUD_URL, {no_ready_check: true});
 sub.subscribe('global');
 
-
-
 var WebSocketServer  = ws.Server;
 var server;
 var app = Express();
@@ -77,15 +75,14 @@ server = app.listen(process.env.PORT || 3000, () => {
   var port = server.address().port;
   Logger.info('Server is listening at %s', port);
 });
-
+var messageManager = new MessageManager();
 var wss = new WebSocketServer({server: server})
 wss.on("connection", function(ws) {
   
-  var currentUser, messageManager;
+  var currentUser;
   var userLogin = function (user) {
     currentUser = user;
     Logger.info("userLogin", JSON.stringify(currentUser));
-    messageManager = new MessageManager(currentUser);
     clientsWithId[currentUser.id] = ws;
   };
 
@@ -122,6 +119,7 @@ wss.on("connection", function(ws) {
           } else {
             userLogin(ret.response.user);
             sendSuccess(ret.response);
+            // TODO: set their device token
           }
         });
     } else if (data.action == 'logout') {
@@ -146,6 +144,8 @@ wss.on("connection", function(ws) {
         } else {
           userLogin(ret.response.user);
           sendSuccess(ret.response);
+          // update deviceTokenIOS
+          auth.setDeviceTokenIOS(ret.response.user.id, data.deviceTokenIOS);
         }
       });
     } else if (messageManager) {
@@ -161,7 +161,7 @@ wss.on("connection", function(ws) {
         if (data.action == 'newMessage') {
           pub.publish('global', message);
         }
-      });
+      }, currentUser);
     }
   });
   // Close connection and remove from array

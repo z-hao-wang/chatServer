@@ -65,6 +65,21 @@ class Auth {
     }
   }
 
+  setDeviceTokenIOS(userId, deviceTokenIOS) {
+    console.log('info: setDeviceTokenIOS=' + deviceTokenIOS);
+    if (userId && deviceTokenIOS) {
+      User.findOne({_id: userId}, function (err, user) {
+        if (!user.deviceTokenIOS) {
+          user.deviceTokenIOS = [];
+        }
+        if (user.deviceTokenIOS.indexOf(deviceTokenIOS) == -1) {
+          user.deviceTokenIOS.push(deviceTokenIOS);
+          user.save();
+        }
+      });
+    }
+  }
+
   login (data, cb) {
     if ((data.email || data.username) && data.password) {
       var searchObj;
