@@ -1,18 +1,13 @@
 'use strict';
 var User = require('../models/user');
 var Message = require('../models/message');
-
 var apn = require('apn');
-var pushNotifPayload = {
-  aps: {
-    badge: 1,
-    sound: 'default',
-    alert: 'Hey! you got message'
-  }
-};
+
 class PushNotifManager {
   constructor() {
-    var options = { };
+    var options = {
+      production: false
+    };
     this.apnConnection = new apn.Connection(options);
   }
 
