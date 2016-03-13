@@ -69,13 +69,10 @@ class Auth {
     console.log('info: setDeviceTokenIOS=' + deviceTokenIOS);
     if (userId && deviceTokenIOS) {
       User.findOne({_id: userId}, function (err, user) {
-        if (!user.deviceTokenIOS) {
-          user.deviceTokenIOS = [];
-        }
-        if (user.deviceTokenIOS.indexOf(deviceTokenIOS) == -1) {
-          user.deviceTokenIOS.push(deviceTokenIOS);
-          user.save();
-        }
+        // TODO: We will need a way to track how many devices this user use. and only store the latest device token for each device
+        // For now we just assume each user has only 1 devicetoken (latest login device)
+        user.deviceTokenIOS = [deviceTokenIOS];
+        user.save();
       });
     }
   }
