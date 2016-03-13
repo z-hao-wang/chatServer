@@ -27,3 +27,11 @@ Tests are using Jest
 
 ## Still in development
 
+
+#set up Apple Push Notification cert
+follow steps at
+https://github.com/argon/node-apn/wiki/Preparing-Certificates
+
+Then put cert.pem and key.pem in the root directory
+
+Set .env file APN_KEY_SECRET=[you passphrase]

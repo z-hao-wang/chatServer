@@ -6,14 +6,15 @@ var apn = require('apn');
 class PushNotifManager {
   constructor() {
     var options = {
-      production: false
+      production: false, // for testing, force to use sandbox mode apn
+      passphrase: process.env.APN_KEY_SECRET
     };
     this.apnConnection = new apn.Connection(options);
   }
 
   send(notif) {
     var that = this;
-    console.log('push notif', notif);
+    console.log('info: send push notif', notif);
     // find message data
     Message.findOne({_id: notif.message_id}, (err, message) => {
       // Find user device token
