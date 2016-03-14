@@ -169,7 +169,8 @@ wss.on("connection", function(ws) {
     if (currentUser) {
       Logger.info("websocket peer closed username=" + currentUser.username);
       clientsWithId[currentUser.id]= null;
+    } else {
+      Logger.info("websocket peer closed anonymous");
     }
-    Logger.info("websocket peer closed");
   })
 });
