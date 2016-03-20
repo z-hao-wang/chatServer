@@ -1,6 +1,6 @@
 # Nodejs bases Chat server
 
-## tech stack
+## Tech stack
 * Mongodb (for all storage)
 * Redis (for scale node servers)
 * websocket (for all network communication between client and server)
@@ -31,7 +31,7 @@ Tests are using Jest
 `npm test`
 
 
-##set up Apple Push Notification cert (required)
+##Set up Apple Push Notification cert (required)
 
 You must have an apple ios developer account in order to set up.
 
@@ -47,7 +47,7 @@ Then put cert.pem and key.pem in the root directory
 
 Set .env file APN_KEY_SECRET=[your passphrase]
 
-## no longer updated
+## No longer updated
 
 This repo has been move to a private repo to continue development
 
