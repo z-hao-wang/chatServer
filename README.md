@@ -30,8 +30,6 @@ Tests are using Jest
 
 `npm test`
 
-## Still in development
-
 
 ##set up Apple Push Notification cert (required)
 
@@ -48,4 +46,10 @@ https://github.com/argon/node-apn/wiki/Preparing-Certificates
 Then put cert.pem and key.pem in the root directory
 
 Set .env file APN_KEY_SECRET=[your passphrase]
+
+## no longer updated
+
+This repo has been move to a private repo to continue development
+
+
 
